@@ -82,9 +82,9 @@
     /* 홈 버튼 */
     .home-button {
       position: absolute;
-      top: 40px;
-      right: 40px;
-      
+      top: 20px;
+      right: 20px;
+      width: 40px;
       height: 40px;
       cursor: pointer;
       z-index: 100;
@@ -219,12 +219,24 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
       border: 0.2px solid #000;
+      position: relative;
     }
     
     .voice-btn:hover {
       background-color: #555;
+    }
+    
+    .voice-btn.recording {
+      background-color: #ff4444;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
     }
     
     .voice-btn img {
@@ -498,8 +510,100 @@
     }
     
     function toggleVoice() {
-      console.log('음성 기능 토글');
-      // 음성 인식 기능 구현
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showAlert('음성 인식을 지원하지 않는 브라우저입니다.<br>Chrome이나 Edge 브라우저를 사용해주세요.');
+        return;
+      }
+
+      const voiceBtn = document.querySelector('.voice-btn');
+      
+      if (voiceBtn.classList.contains('recording')) {
+        // 녹음 중이면 중지
+        stopVoiceRecognition();
+      } else {
+        // 녹음 시작
+        startVoiceRecognition();
+      }
+    }
+    
+    let recognition = null;
+    
+    function startVoiceRecognition() {
+      console.log('음성 인식 시작');
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      
+      // 음성 인식 설정
+      recognition.lang = 'ko-KR'; // 한국어 설정
+      recognition.continuous = false; // 한 번만 인식
+      recognition.interimResults = false; // 중간 결과 표시 안함
+      recognition.maxAlternatives = 1; // 최대 1개 결과만
+      
+      const voiceBtn = document.querySelector('.voice-btn');
+      voiceBtn.classList.add('recording');
+      
+      // 음성 인식 시작
+      recognition.start();
+      
+      // 인식 결과 처리
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        console.log('음성 인식 결과:', transcript);
+        
+        // 입력창에 텍스트 추가
+        const messageInput = document.getElementById('messageInput');
+        messageInput.value = transcript;
+        messageInput.focus();
+        
+        // 녹음 상태 해제
+        voiceBtn.classList.remove('recording');
+      };
+      
+      // 인식 종료 처리
+      recognition.onend = function() {
+        console.log('음성 인식 종료');
+        voiceBtn.classList.remove('recording');
+      };
+      
+      // 에러 처리
+      recognition.onerror = function(event) {
+        console.error('음성 인식 에러:', event.error);
+        voiceBtn.classList.remove('recording');
+        
+        let errorMessage = '음성 인식 중 오류가 발생했습니다.';
+        switch(event.error) {
+          case 'no-speech':
+            errorMessage = '음성이 감지되지 않았습니다.<br>다시 시도해주세요.';
+            break;
+          case 'audio-capture':
+            errorMessage = '마이크에 접근할 수 없습니다.<br>마이크 권한을 확인해주세요.';
+            break;
+          case 'not-allowed':
+            errorMessage = '마이크 사용 권한이 거부되었습니다.<br>브라우저 설정에서 마이크 권한을 허용해주세요.';
+            break;
+          case 'network':
+            errorMessage = '네트워크 오류가 발생했습니다.<br>인터넷 연결을 확인해주세요.';
+            break;
+        }
+        showAlert(errorMessage);
+      };
+      
+      // 3초 후 자동 타임아웃 (너무 길면 자동 종료)
+      setTimeout(() => {
+        if (recognition && voiceBtn.classList.contains('recording')) {
+          recognition.stop();
+        }
+      }, 10000); // 10초 타임아웃
+    }
+    
+    function stopVoiceRecognition() {
+      console.log('음성 인식 중지');
+      if (recognition) {
+        recognition.stop();
+      }
+      const voiceBtn = document.querySelector('.voice-btn');
+      voiceBtn.classList.remove('recording');
     }
     
     let messageCount = 2; // 2번까지 있으니까 다음은 3번부터
