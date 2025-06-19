@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>열심히의 기준</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: #FFFF00;
+    }
+    
+    .container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .main-image {
+      width: 70vw;
+      height: auto;
+      object-fit: contain;
+    }
+    
+    /* 타이머 버튼들 */
+    .timer-controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    .timer-btn {
+      background: #FFFF00;
+      border: 2px solid #000;
+      border-radius: 25px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #000;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      min-width: 70px;
+      text-align: center;
+      font-family: inherit;
+    }
+    
+    .timer-btn:hover {
+      background: #FFE135;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .timer-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .timer-btn.active {
+      background: #000;
+      color: #FFFF00;
+      border-color: #FFFF00;
+    }
+    
+    .timer-btn .timer-icon {
+      font-size: 14px;
+      margin-right: 4px;
+    }
+    
+    /* 홈 버튼 */
+    .home-button {
+      position: absolute;
+      top: 40px;
+      right: 40px;
+      
+      height: 40px;
+      cursor: pointer;
+      z-index: 100;
+    }
+    
+    /* 가운데 흰색 박스 */
+    .yellow-box {
+      position: absolute;
+      top: 45.5%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 370px;
+      height: 255px;
+      background-color: white;
+      border: 2px solid #000;
+      border-radius: 8px;
+      z-index: 50;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* 내부 노란색 박스 */
+    .inner-yellow {
+      width: 100%;
+      height: 100%;
+      background-color: #FFFF00;
+      border: 1px solid #000;
+      border-radius: 4px;
+      position: relative;
+      padding: 15px 25px 15px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+    
+    /* 스크롤바 스타일 */
+    .inner-yellow::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .inner-yellow::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .inner-yellow::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+    }
+    
+    .inner-yellow::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+    
+    /* 메시지 박스 */
+    .message-item {
+      background-color: #f8f8f8;
+      border: 1px solid #000;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    
+    .message-number {
+      font-weight: bold;
+      font-size: 14px;
+      min-width: 12px;
+    }
+    
+    .message-text {
+      flex: 1;
+    }
+    
+    /* 스크롤 인디케이터 */
+    .scroll-indicator {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 40px;
+      background-color: #ddd;
+      border-radius: 2px;
+      opacity: 0.7;
+    }
+    
+    /* 오른쪽 하단 작은 원 3개 */
+    .small-dots {
+      position: absolute;
+      bottom: 8px;
+      right: 15px;
+      display: flex;
+      gap: 4px;
+    }
+    
+    .small-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: transparent;
+      border: 0.2px solid #000;
+    }
+    
+    /* 하단 입력 영역 */
+    .input-section {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 95%;
+      max-width: 700px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 20;
+    }
+    
+    .voice-btn {
+      width: 50px;
+      height: 50px;
+      background-color: #333;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      border: 0.2px solid #000;
+    }
+    
+    .voice-btn:hover {
+      background-color: #555;
+    }
+    
+    .voice-btn img {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .input-container {
+      flex: 1;
+      position: relative;
+    }
+    
+    .message-input {
+      width: 100%;
+      padding: 16px 20px;
+      border: 0.2px solid #000;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      background-color: white;
+      font-family: inherit;
+    }
+    
+    .message-input::placeholder {
+      color: #999;
+    }
+    
+    .send-btn {
+      background-color: #39FF14;
+      color: #000;
+      border: 0.2px solid #000;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .send-btn:hover {
+      background-color: #32e612;
+    }
+    
+    /* 장바구니 스타일 알림 */
+    .alert-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      border: 2px solid #000;
+      padding: 25px 35px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      max-width: 400px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    
+    .alert-message.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* 홈 이동 확인 창 */
+    .home-confirm-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    
+    .home-confirm-content {
+      background: #000;
+      background-image: 
+        linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+      border: 2px solid #00ff00;
+      border-radius: 15px;
+      padding: 40px 50px;
+      text-align: center;
+      max-width: 420px;
+      min-width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif;
+    }
+    
+    .home-confirm-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+      line-height: 1.3;
+    }
+    
+    .home-confirm-message {
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.3;
+      margin-bottom: 35px;
+      color: #fff;
+    }
+    
+    .home-confirm-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+    
+    .home-confirm-btn {
+      padding: 15px 45px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      min-width: 120px;
+    }
+    
+    .home-confirm-btn.cancel {
+      background: #ccc;
+      color: #000;
+    }
+    
+    .home-confirm-btn.cancel:hover {
+      background: #bbb;
+      transform: translateY(-2px);
+    }
+    
+    .home-confirm-btn.confirm {
+      background: #39FF14;
+      color: #000;
+    }
+    
+    .home-confirm-btn.confirm:hover {
+      background: #32e612;
+      transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+      .home-button {
+        width: 35px;
+        height: 35px;
+        top: 15px;
+        right: 15px;
+      }
+      
+      .input-section {
+        width: 95%;
+        padding: 0 10px;
+      }
+      
+      .voice-btn {
+        width: 45px;
+        height: 45px;
+      }
+      
+      .message-input {
+        padding: 14px 18px;
+        font-size: 14px;
+      }
+      
+      .send-btn {
+        padding: 14px 20px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 타이머 버튼들 -->
+  <div class="timer-controls">
+    <button class="timer-btn" onclick="startTimer(30)">
+      <span class="timer-icon">⏱️</span>30초
+    </button>
+    <button class="timer-btn" onclick="extendTimer(15)">
+      <span class="timer-icon">⏰</span>15분 연장
+    </button>
+  </div>
+  
+  <!-- 홈 버튼 -->
+  <img src="https://i.imgur.com/qTjgYrU.png" alt="홈으로" class="home-button" onclick="goHome()" />
+  
+  <!-- 메인 컨테이너 -->
+  <div class="container">
+    <img src="https://i.imgur.com/SahMQlq.jpeg" alt="열심히의 기준" class="main-image" />
+    <!-- 가운데 흰색 박스 안에 노란색 박스 -->
+    <div class="yellow-box">
+      <div class="inner-yellow">
+        <div class="message-item">
+          <span class="message-number">1</span>
+          <span class="message-text">열심히하라는 말은 너무 상대적 단어예요.</span>
+        </div>
+        <div class="message-item">
+          <span class="message-number">4</span>
+          <span class="message-text">최선을 다했다는 말이 열심히하라는 말을 대체할 수 있을까요?</span>
+        </div>
+        <div class="message-item">
+          <span class="message-number">2</span>
+          <span class="message-text">열심히라는 열정적인 마음? 불쌍하니까 비슷한 것 같기도</span>
+        </div>
+        <div class="scroll-indicator"></div>
+        <div class="small-dots">
+          <div class="small-dot"></div>
+          <div class="small-dot"></div>
+          <div class="small-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 입력 영역 -->
+  <div class="input-section">
+    <div class="voice-btn" onclick="toggleVoice()">
+      <img src="https://i.imgur.com/w9ou03J.png" alt="음성" />
+    </div>
+    <div class="input-container">
+      <input 
+        type="text" 
+        class="message-input" 
+        id="messageInput"
+        placeholder="최선은 부정에서 긍정으로 회복할 때 쓰이지만 열심은 아닌 것 같아요."
+        onkeypress="handleEnter(event)"
+      />
+    </div>
+    <button class="send-btn" onclick="sendMessage()">전송</button>
+  </div>
+
+  <!-- 홈 이동 확인 창 -->
+  <div class="home-confirm-modal" id="homeConfirmModal">
+    <div class="home-confirm-content">
+      <div class="home-confirm-title">패널티가 주어집니다</div>
+      <div class="home-confirm-message">정말로 퇴장하시겠습니까?</div>
+      <div class="home-confirm-buttons">
+        <button class="home-confirm-btn cancel" onclick="closeHomeConfirm()">아니오</button>
+        <button class="home-confirm-btn confirm" onclick="confirmGoHome()">예</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goHome() {
+      console.log('홈 이동 확인창 표시');
+      // 홈 이동 확인창 표시
+      document.getElementById('homeConfirmModal').style.display = 'flex';
+    }
+    
+    function closeHomeConfirm() {
+      console.log('홈 이동 취소');
+      // 확인창 닫기
+      document.getElementById('homeConfirmModal').style.display = 'none';
+    }
+    
+    function confirmGoHome() {
+      console.log('홈으로 이동 확정');
+      // 실제 홈 페이지로 이동
+      window.location.href = 'https://kimjiwoow.github.io/Q-common/';
+    }
+    
+    function toggleVoice() {
+      console.log('음성 기능 토글');
+      // 음성 인식 기능 구현
+    }
+    
+    let messageCount = 2; // 2번까지 있으니까 다음은 3번부터
+    
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      
+      if (text !== "") {
+        // 새 메시지 요소 생성 (번호는 항상 3)
+        const messageContainer = document.querySelector('.inner-yellow');
+        const scrollIndicator = document.querySelector('.scroll-indicator');
+        
+        const newMessage = document.createElement('div');
+        newMessage.className = 'message-item';
+        newMessage.innerHTML = `
+          <span class="message-number">3</span>
+          <span class="message-text">${text}</span>
+        `;
+        
+        // 스크롤 인디케이터 앞에 메시지 추가
+        messageContainer.insertBefore(newMessage, scrollIndicator);
+        
+        // 입력창 비우기
+        input.value = "";
+        
+        // 스크롤을 맨 아래로 이동
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+        
+        console.log('메시지 전송:', text, '번호: 3');
+      }
+    }
+    
+    function handleEnter(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+    
+    // 타이머 기능
+    let currentTimer = null;
+    let timerInterval = null;
+    let totalTimeLeft = 0;
+    let activeTimerBtn = null;
+    
+    // 장바구니 스타일 알림 함수
+    function showAlert(message) {
+      // 기존 알림이 있다면 제거
+      const existingAlert = document.querySelector('.alert-message');
+      if (existingAlert) {
+        existingAlert.remove();
+      }
+
+      // 새 알림 생성
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert-message';
+      alertDiv.innerHTML = message;
+      document.body.appendChild(alertDiv);
+
+      // 알림 표시
+      setTimeout(() => {
+        alertDiv.classList.add('show');
+      }, 10);
+
+      // 4초 후 알림 제거
+      const duration = 4000;
+      setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+          }
+          // 종료 메시지인 경우 페이지 이동
+          if (message === '종료되었습니다') {
+            window.location.href = 'https://kimjiwoow.github.io/Q-COMMON-5/';
+          }
+        }, 300);
+      }, duration);
+    }
+    
+    function formatTime(seconds) {
+      if (seconds >= 60) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}분 ${remainingSeconds}초`;
+      } else {
+        return `${seconds}초`;
+      }
+    }
+    
+    function updateTimerDisplay() {
+      if (activeTimerBtn && totalTimeLeft > 0) {
+        activeTimerBtn.innerHTML = `<span class="timer-icon">⏱️</span>${formatTime(totalTimeLeft)}`;
+      }
+    }
+    
+    function startTimer(seconds) {
+      console.log(`${seconds}초 타이머 시작`);
+      
+      // 기존 타이머가 있으면 중지
+      if (currentTimer && currentTimer !== 'completed') {
+        clearTimeout(currentTimer);
+      }
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+      
+      // 버튼 활성화 표시
+      const timerBtn = event.target.closest('.timer-btn');
+      document.querySelectorAll('.timer-btn').forEach(btn => btn.classList.remove('active'));
+      timerBtn.classList.add('active');
+      
+      // 전역 변수에 저장
+      activeTimerBtn = timerBtn;
+      const originalText = timerBtn.innerHTML;
+      totalTimeLeft = seconds;
+      
+      // 실시간 카운트다운 표시
+      timerInterval = setInterval(() => {
+        totalTimeLeft--;
+        updateTimerDisplay();
+        
+        if (totalTimeLeft <= 0) {
+          clearInterval(timerInterval);
+          timerBtn.classList.remove('active');
+          timerBtn.innerHTML = originalText;
+          activeTimerBtn = null;
+          currentTimer = 'completed';
+          showAlert('종료되었습니다');
+        }
+      }, 1000);
+      
+      // 초기 화면 업데이트
+      updateTimerDisplay();
+    }
+    
+    function extendTimer(minutes) {
+      console.log(`${minutes}분 연장`);
+      
+      // 타이머가 실행 중일 때만 연장 가능
+      if (activeTimerBtn && totalTimeLeft > 0) {
+        totalTimeLeft += (minutes * 60); // 분을 초로 변환하여 추가
+        
+        // 즉시 화면 업데이트
+        updateTimerDisplay();
+        
+        // 연장 버튼 피드백
+        const extendBtn = event.target.closest('.timer-btn');
+        const originalText = extendBtn.innerHTML;
+        
+        extendBtn.classList.add('active');
+        extendBtn.innerHTML = `<span class="timer-icon">⏰</span>+${minutes}분!`;
+        
+        setTimeout(() => {
+          extendBtn.classList.remove('active');
+          extendBtn.innerHTML = originalText;
+        }, 2000);
+        
+        showAlert(`${minutes}분이 추가되었습니다!<br><br>총 남은 시간: ${formatTime(totalTimeLeft)}`);
+      } else {
+        // 타이머가 실행되지 않을 때
+        showAlert('먼저 타이머를 시작해주세요!');
+      }
+    }
+    
+    // 페이지 로드시 자동으로 30초 타이머 시작
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('페이지 로드 완료 - 30초 타이머 자동 시작');
+      
+      // 30초 타이머 버튼을 찾아서 자동 클릭
+      const timerBtn = document.querySelector('.timer-btn');
+      if (timerBtn) {
+        // 버튼 활성화
+        timerBtn.classList.add('active');
+        activeTimerBtn = timerBtn;
+        const originalText = timerBtn.innerHTML;
+        totalTimeLeft = 30;
+        
+        // 실시간 카운트다운 시작
+        timerInterval = setInterval(() => {
+          totalTimeLeft--;
+          updateTimerDisplay();
+          
+          if (totalTimeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerBtn.classList.remove('active');
+            timerBtn.innerHTML = originalText;
+            activeTimerBtn = null;
+            currentTimer = 'completed';
+            showAlert('종료되었습니다');
+          }
+        }, 1000);
+        
+        // 초기 화면 업데이트
+        updateTimerDisplay();
+      }
+    });
+  </script>
+</body>
+</html>
